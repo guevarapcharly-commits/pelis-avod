@@ -1,9 +1,21 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
+import Image from "next/image";
+
+// Tipado de película (evita "any")
+type Movie = {
+  id: string;
+  title: string;
+  year: number;
+  genres?: string[];
+  poster: string;
+  hlsUrl: string;
+  description: string;
+};
 
 // ---------- Datos de ejemplo ----------
-const SAMPLE_MOVIES = [
+const SAMPLE_MOVIES: Movie[] = [
   {
     id: "1",
     title: "Planeta Azul (Dominio público)",
@@ -49,9 +61,7 @@ function HlsPlayer({ src, poster }: { src: string; poster?: string }) {
     }
 
     return () => {
-      if (hls) {
-        hls.destroy();
-      }
+      if (hls) hls.destroy();
     };
   }, [src]);
 
@@ -69,14 +79,22 @@ function HlsPlayer({ src, poster }: { src: string; poster?: string }) {
 }
 
 // ---------- Tarjeta de película ----------
-function MovieCard({ movie, onPlay }: { movie: any; onPlay: (m: any) => void }) {
+function MovieCard({
+  movie,
+  onPlay,
+}: {
+  movie: Movie;
+  onPlay: (m: Movie) => void;
+}) {
   return (
     <div className="bg-white rounded-2xl shadow hover:shadow-lg transition p-3 flex flex-col gap-3">
       <div className="relative w-full aspect-[2/3] overflow-hidden rounded-xl">
-        <img
+        <Image
           src={movie.poster}
           alt={movie.title}
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
         />
       </div>
       <div className="flex-1 flex flex-col gap-1">
@@ -127,7 +145,17 @@ function Modal({
 }
 
 // ---------- Filtros ----------
-function Filters({ query, setQuery, genre, setGenre }: any) {
+function Filters({
+  query,
+  setQuery,
+  genre,
+  setGenre,
+}: {
+  query: string;
+  setQuery: (v: string) => void;
+  genre: string;
+  setGenre: (v: string) => void;
+}) {
   const genres = Array.from(
     new Set(SAMPLE_MOVIES.flatMap((m) => m.genres || []))
   ).sort();
@@ -164,10 +192,10 @@ function Filters({ query, setQuery, genre, setGenre }: any) {
 
 // ---------- App principal ----------
 export default function MovieApp() {
-  const [movies] = useState(SAMPLE_MOVIES);
-  const [query, setQuery] = useState("");
-  const [genre, setGenre] = useState("");
-  const [current, setCurrent] = useState<any | null>(null);
+  const [movies] = useState<Movie[]>(SAMPLE_MOVIES);
+  const [query, setQuery] = useState<string>("");
+  const [genre, setGenre] = useState<string>("");
+  const [current, setCurrent] = useState<Movie | null>(null);
 
   const filtered = movies.filter((m) => {
     const q = query.toLowerCase().trim();
